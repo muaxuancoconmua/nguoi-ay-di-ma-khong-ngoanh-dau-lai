@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Solo Leveling 9.3</title>
+    <style>
+        /* --- CSS TỔNG THỂ --- */
+        body { 
+            background-image: url('so1.jpg'); background-size: cover; background-position: center; background-attachment: fixed;
+            color: #58a6ff; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; 
+            padding: 0; margin: 0; min-height: 100vh; overflow-x: hidden; 
+            /* Con trỏ hình kiếm Sung Jin Woo */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2358a6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="22" x2="22" y2="2"></line><line x1="22" y1="2" x2="15" y2="2"></line><line x1="22" y1="2" x2="22" y2="9"></line><line x1="11" y1="13" x2="15" y2="17"></line></svg>'), pointer; 
+        }
+        .overlay-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(10, 12, 16, 0.88); z-index: -2; }
+        .mana-particle { position: fixed; bottom: -10px; width: 3px; height: 3px; background-color: #58a6ff; border-radius: 50%; box-shadow: 0 0 10px #58a6ff, 0 0 20px #8a2be2; pointer-events: none; z-index: -1; animation: floatUp linear infinite; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 0; } 20% { opacity: 0.8; } 80% { opacity: 0.5; } 100% { transform: translateY(-100vh) scale(0); opacity: 0; } }
+        
+        .typewriter { overflow: hidden; border-right: .15em solid #58a6ff; white-space: nowrap; margin: 0 auto; letter-spacing: .1em; animation: typing 2.5s steps(30, end), blink-caret .75s step-end infinite; display: inline-block; }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #58a6ff; } }
+        .btn-pulse { animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 5px #58a6ff; } 50% { box-shadow: 0 0 20px #58a6ff; } }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-3px, 0, 0); } 20%, 80% { transform: translate3d(5px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0); } 40%, 60% { transform: translate3d(8px, 0, 0); } }
+
+        /* Cửa sổ & Nút bấm */
+        .window { 
+            position: relative; border: 1px solid rgba(88, 166, 255, 0.3); box-shadow: 0 0 20px rgba(88, 166, 255, 0.2); 
+            padding: 25px; border-radius: 8px; width: 450px; max-width: 90vw; background-color: rgba(13, 17, 23, 0.95); 
+            margin-top: 20px; display: none; flex-direction: column; margin-bottom: 20px;
+        }
+        .window::before { content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px; background: linear-gradient(45deg, transparent, #58a6ff, transparent, #8a2be2); z-index: -1; border-radius: 9px; background-size: 400%; animation: borderGlow 4s linear infinite; opacity: 0.5; }
+        @keyframes borderGlow { 0% { background-position: 0 0; } 50% { background-position: 400% 0; } 100% { background-position: 0 0; } }
+        .active-window { display: flex; animation: fadeIn 0.5s cubic-bezier(0.1, 0.8, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        h1, h2 { text-align: center; text-transform: uppercase; text-shadow: 0 0 10px #58a6ff; margin-top: 0; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+        label { margin-top: 10px; font-weight: bold; font-size: 14px; color: #c9d1d9;}
+        input, select { background-color: rgba(1, 4, 9, 0.8); border: 1px solid #30363d; color: #fff; padding: 12px; margin-top: 5px; border-radius: 4px; width: 95%; font-family: inherit; transition: 0.3s;}
+        input:focus, select:focus { border-color: #58a6ff; outline: none; box-shadow: 0 0 15px rgba(88, 166, 255, 0.3);}
+        
+        .btn, .btn-reroll, .menu-item, select, input[type="file"], .dungeon-card { cursor: inherit; }
+        .btn { background-color: rgba(13, 17, 23, 0.8); border: 1px solid #30363d; color: #c9d1d9; padding: 12px; font-size: 14px; font-weight: bold; transition: all 0.3s; margin-top: 10px; border-radius: 4px; width: 100%; text-align: center; text-transform: uppercase;}
+        .btn-main { color: #58a6ff; border-color: #58a6ff; font-size: 15px;}
+        .btn-main:hover { background-color: #58a6ff; color: #0d1117; box-shadow: 0 0 20px #58a6ff;}
+        .btn-back { border-color: #8b949e; color: #8b949e; margin-top: 20px;}
+        .btn-back:hover { background-color: #8b949e; color: #0d1117;}
+        
+        /* Profile & Đồng hồ */
+        .profile-card { display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-bottom: 15px;}
+        .avatar-img { width: 85px; height: 85px; border-radius: 5px; border: 2px solid #58a6ff; object-fit: cover; animation: avatarBreathing 3s ease-in-out infinite;}
+        @keyframes avatarBreathing { 0%, 100% { box-shadow: 0 0 10px rgba(88, 166, 255, 0.4); } 50% { box-shadow: 0 0 25px rgba(138, 43, 226, 0.8); border-color: #8a2be2;} }
+        #realtime-clock { text-align: center; color: #8b949e; font-size: 16px; font-weight: bold; margin-top: 20px; text-shadow: 0 0 5px rgba(139,148,158,0.5); letter-spacing: 1px;}
+        
+        /* Tiến độ */
+        .target-box { text-align: center; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 5px; border: 1px solid #ffeb3b; box-shadow: 0 0 10px rgba(255,235,59,0.1); position: relative; overflow: hidden;}
+        .target-text { font-size: 32px; font-weight: bold; color: #ffeb3b; text-shadow: 0 0 15px #ffeb3b; margin: 5px 0;}
+        .btn-checkin { background-color: #3fb950; color: white; border: none; padding: 12px; border-radius: 5px; margin-top: 10px; text-transform: uppercase; font-weight: bold; width: 100%; transition: 0.3s; font-size: 15px;}
+        .btn-checkin:hover:not(:disabled) { box-shadow: 0 0 15px #3fb950; background: #46c758;}
+        .btn-checkin:disabled { background-color: #161b22; color: #8b949e; box-shadow: none;}
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;}
+        .menu-item { background: rgba(22, 27, 34, 0.8); border: 1px solid #30363d; padding: 15px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 15px; color: #c9d1d9; transition: all 0.3s; position: relative; overflow: hidden;}
+        .menu-item:hover { border-color: #58a6ff; color: #fff; background: rgba(88, 166, 255, 0.1); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(88,166,255,0.2);}
+
+        /* Bars */
+        .bar-container { width: 100%; background-color: #010409; border-radius: 5px; overflow: hidden; margin-top: 5px; border: 1px solid #30363d; height: 12px;}
+        .bar-fill { height: 100%; transition: width 0.5s cubic-bezier(0.1, 0.8, 0.3, 1); }
+        .bg-exp { background: linear-gradient(90deg, #1f6feb, #58a6ff); box-shadow: 0 0 10px #58a6ff;}
+        .bg-hp { background: linear-gradient(90deg, #da3633, #ff5858); box-shadow: 0 0 10px #ff5858;}
+        .bg-mp { background: linear-gradient(90deg, #6e40c9, #d2a8ff); box-shadow: 0 0 10px #8a2be2;}
+
+        /* Nhiệm vụ */
+        .quest-box { background: rgba(13, 17, 23, 0.8); border: 1px solid #30363d; border-left: 4px solid; padding: 15px; border-radius: 5px; margin-bottom: 12px; transition: all 0.4s;}
+        .quest-title { font-size: 15px; font-weight: bold; color: #fff; margin-bottom: 5px; text-shadow: 0 0 5px rgba(255,255,255,0.3); border-bottom: 1px dashed #30363d; padding-bottom: 5px;}
+        .quest-instruct { font-size: 12px; color: #c9d1d9; font-style: italic; margin-bottom: 8px; background: #010409; padding: 8px; border-radius: 4px; border-left: 2px solid #58a6ff; line-height: 1.5;}
+        .quest-detail { font-size: 12px; color: #8b949e; margin-bottom: 8px; font-weight: bold;}
+        .quest-reward { font-size: 13px; color: #f2cc60; font-weight: bold; text-shadow: 0 0 5px rgba(242, 204, 96, 0.3);}
+        .quest-actions { display: flex; gap: 10px; margin-top: 10px;}
+        .btn-complete { background: transparent; border: 1px solid #3fb950; color: #3fb950; padding: 8px; border-radius: 4px; font-weight:bold; flex: 2; transition: 0.3s; text-transform: uppercase;}
+        .btn-complete:hover { background: #3fb950; color: #fff; box-shadow: 0 0 15px rgba(63, 185, 80, 0.6);}
+        .btn-reroll { background: transparent; border: 1px solid #ffeb3b; color: #ffeb3b; padding: 8px; border-radius: 4px; font-weight:bold; flex: 1; transition: 0.3s;}
+        .btn-reroll:hover { background: #ffeb3b; color: #000; box-shadow: 0 0 10px #ffeb3b;}
+
+        /* Dinh Dưỡng */
+        .food-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #30363d; padding: 8px 0; color: #fff; font-size: 13px;}
+        .food-item span { color: #ff5858; font-weight: bold;}
+        .food-list-container { max-height: 150px; overflow-y: auto; background: #010409; border: 1px solid #30363d; padding: 10px; border-radius: 5px; margin-bottom: 10px;}
+
+        /* Boss & Hầm ngục */
+        .dungeon-list { display: flex; flex-direction: column; gap: 10px; }
+        .dungeon-card { background: rgba(22, 27, 34, 0.8); border: 1px solid #30363d; padding: 15px; border-radius: 5px; text-align: left; transition: 0.3s; position: relative; overflow: hidden;}
+        .dungeon-card:hover { border-color:#ff5858; background: rgba(58, 0, 0, 0.4); box-shadow: 0 0 15px rgba(255, 88, 88, 0.2); transform: scale(1.02);}
+        
+        .combat-arena { display: none; flex-direction: column; align-items: center;}
+        .boss-sprite { width: 160px; height: 160px; background: #010409; border: 2px solid #ff5858; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 60px; margin-bottom: 15px; box-shadow: 0 0 30px rgba(255,88,88,0.5); text-shadow: 0 0 20px #ff5858;}
+        
+        .slash-effect { position: absolute; top: 40%; left: 0; width: 100%; height: 2px; background: #fff; box-shadow: 0 0 20px 5px #ff5858, 0 0 40px 10px #ff5858; transform: rotate(-15deg) scaleX(0); opacity: 0; z-index: 100; pointer-events: none;}
+        .slash-animate { animation: slashAnim 0.3s ease-out forwards; }
+        @keyframes slashAnim { 0% { transform: rotate(-15deg) scaleX(0); opacity: 1; } 50% { transform: rotate(-15deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-15deg) scaleX(1) translateY(20px); opacity: 0; } }
+
+        .skill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 20px;}
+        .btn-skill { padding: 12px; font-size: 13px; background: rgba(1,4,9,0.8); border: 1px solid; text-transform: uppercase;}
+        .skill-attack { color: #fff; border-color: #8b949e; } .skill-attack:hover { background: #8b949e; color:#000;}
+        .skill-heavy { color: #ff5858; border-color: #ff5858; } .skill-heavy:hover { background: #ff5858; color:#000; box-shadow: 0 0 15px #ff5858;}
+        .skill-heal { color: #3fb950; border-color: #3fb950; } .skill-heal:hover { background: #3fb950; color:#000; box-shadow: 0 0 15px #3fb950;}
+
+        .fullscreen-popup { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; color: #ffeb3b; text-align: center; animation: fadeIn 0.5s;}
+        .boss-reward-img { max-width: 90%; max-height: 60vh; border-radius: 10px; box-shadow: 0 0 40px #f2cc60; margin: 20px; animation: pulseGlow 3s infinite;}
+
+        /* CSS MỚI: CAMERA & GPS */
+        .camera-container { width: 100%; height: 280px; background: #000; border: 2px solid #ff5858; border-radius: 8px; margin-bottom: 15px; position: relative; overflow: hidden; cursor:pointer;}
+        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .ai-overlay { position: absolute; top:0; left:0; width:100%; height:100%; box-shadow: inset 0 0 20px #ff5858; pointer-events: none;}
+        .scan-line { position: absolute; top:0; left:0; width:100%; height:2px; background: #ff5858; box-shadow: 0 0 10px #ff5858; animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .pushup-counter { position: absolute; bottom: 10px; right: 15px; font-size: 48px; font-weight: bold; color: #ffeb3b; text-shadow: 0 0 10px #000, 0 0 20px #ffeb3b; z-index: 10; transition: 0.2s;}
+
+        .gps-progress-container { width: 100%; height: 15px; background: #21262d; border-radius: 8px; border: 1px solid #30363d; overflow: hidden; margin-top: 10px; }
+        .gps-progress-fill { height: 100%; background: linear-gradient(90deg, #238636, #3fb950); width: 0%; transition: 0.5s; box-shadow: 0 0 10px #3fb950; }
+    </style>
+</head>
+<body>
+    <div class="overlay-bg"></div>
+
+    <div id="screen-welcome" class="window active-window" style="text-align: center; justify-content: center; padding: 50px 20px;">
+        <h1 style="border:none; font-size: 20px; line-height: 1.6; color:#8b949e;">CHÀO MỪNG BẠN ĐẾN VỚI<br>
+            <span class="typewriter" style="color:#ffeb3b; font-size: 32px; text-shadow: 0 0 20px #ffeb3b; margin-top:10px;">HỆ THỐNG THỨC TỈNH</span>
+        </h1>
+        <p style="color: #c9d1d9; font-size: 15px; margin-bottom: 40px; font-style: italic;">"Chỉ có kẻ mạnh mới có thể tồn tại."</p>
+        <button class="btn btn-main btn-pulse" style="padding: 18px; letter-spacing: 2px;" onclick="openScreen('screen-setup-1')">TIẾN VÀO HỆ THỐNG</button>
+    </div>
+
+    <div id="screen-setup-1" class="window">
+        <h1>Bước 1: Quét Thể Trạng</h1>
+        <label>Danh xưng Thợ Săn:</label><input type="text" id="input-name" value="Sung Jin-Woo">
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;"><label>Tuổi:</label><input type="number" id="input-age" value="20"></div>
+            <div style="flex:1;"><label>Giới tính:</label><select id="input-gender"><option value="Nam">Nam</option><option value="Nữ">Nữ</option></select></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1;"><label>Cao (cm):</label><input type="number" id="input-height" value="175"></div>
+            <div style="flex:1;"><label>Nặng (kg):</label><input type="number" id="input-weight" value="70"></div>
+        </div>
+        <button class="btn btn-main" style="margin-top:25px;" onclick="openScreen('screen-setup-2')">Tiếp Tục ⋙</button>
+    </div>
+
+    <div id="screen-setup-2" class="window">
+        <h1>Bước 2: Lập Lộ Trình</h1>
+        <label>Định hướng sức mạnh (Focus):</label>
+        <select id="input-focus">
+            <option value="Giảm Mỡ Toàn Thân">Thích Khách: Giảm Mỡ / Nhanh Nhẹn</option>
+            <option value="Ngực và Tay Sau">Chiến Binh: Tăng Cơ Ngực & Tay Sau</option>
+            <option value="Lưng và Tay Trước">Cung Thủ: Tăng Cơ Lưng & Tay Trước</option>
+            <option value="Mông và Đùi">Hiệp Sĩ: Sức Mạnh Phần Thân Dưới</option>
+        </select>
+        <label>Cam kết thời gian (Số tuần):</label>
+        <input type="number" id="input-weeks" value="12">
+        <label>Tần suất vào Hầm Ngục (Ngày/Tuần)?</label>
+        <select id="input-days"><option value="3">3 Ngày</option><option value="4">4 Ngày</option><option value="5">5 Ngày</option></select>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn btn-back" style="margin-top:0;" onclick="openScreen('screen-setup-1')">Quay lại</button>
+            <button class="btn btn-main" style="margin-top:0;" onclick="openScreen('screen-setup-3')">Tiếp Tục ⋙</button>
+        </div>
+    </div>
+
+    <div id="screen-setup-3" class="window">
+        <h1>Bước 3: Khí Tài</h1>
+        <label>Trang bị mang theo:</label>
+        <select id="input-equip">
+            <option value="none">Tay Không (Tập Bodyweight tại nhà)</option>
+            <option value="dumbbell">Khí Giới Nhẹ (Có Tạ đơn / Dây kháng lực)</option>
+            <option value="gym">Phòng Vũ Khí (Đầy đủ máy tập Gym)</option>
+        </select>
+        <label>Nhận Diện (Ảnh Đại Diện):</label>
+        <input type="file" id="input-avatar" accept="image/*">
+        <div style="display:flex; gap:10px; margin-top:25px;">
+            <button class="btn btn-back" style="margin-top:0;" onclick="openScreen('screen-setup-2')">Quay lại</button>
+            <button class="btn btn-main btn-pulse" style="margin-top:0; background:#ffeb3b; color:#000; border:none;" onclick="finishSetup()">HOÀN TẤT THỨC TỈNH</button>
+        </div>
+    </div>
+
+    <div id="screen-home" class="window">
+        <h1 style="border:none; margin-bottom: 0;">Sảnh Chờ</h1>
+        <div class="profile-card">
+            <img id="display-avatar" class="avatar-img" src="rank_e.jpg">
+            <div style="flex: 1;">
+                <div style="font-size: 18px; font-weight: bold; color: #fff;" id="display-name">Tên</div>
+                <div style="color: #ffeb3b; font-size: 13px; font-weight:bold; text-shadow: 0 0 5px #ffeb3b;" id="display-class">Thợ Săn Hạng E</div>
+                <div style="font-size: 12px; color:#8b949e; margin-top:2px;">Hệ: <span id="display-focus" style="color:#c9d1d9;"></span></div>
+                <div style="font-size: 13px; margin-top: 5px;">Level: <span id="display-level" style="font-weight:bold; color:#fff;">1</span></div>
+                <div class="bar-container"><div class="bar-fill bg-exp" id="display-exp-bar"></div></div>
+            </div>
+        </div>
+
+        <div class="target-box">
+            <div style="font-size: 12px; color: #8b949e; letter-spacing: 1px;">CHỈ TIÊU TIẾN HÓA</div>
+            <div class="target-text"><span id="days-checked">0</span> / <span id="days-total">36</span> Ngày</div>
+            <button id="btn-checkin" class="btn-checkin" onclick="diemDanh()">BÁO CÁO NHIỆM VỤ HÀNG NGÀY</button>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-item" onclick="openScreen('screen-quest')">⚔️ Huấn Luyện</div>
+            <div class="menu-item" onclick="openScreen('screen-stats')">📊 Chỉ Số</div>
+            <div class="menu-item" onclick="openScreen('screen-food')">🍖 Dược Phẩm</div>
+            <div class="menu-item btn-pulse" style="border-color: #ff5858; color: #ff5858;" onclick="openScreen('screen-boss-list')">🔥 Hầm Ngục</div>
+        </div>
+
+        <div id="realtime-clock">[--:--:--]</div>
+
+        <button class="btn btn-back" style="font-size:12px; padding:8px;" onclick="resetData()">[Reset Hệ Thống]</button>
+    </div>
+
+    <div id="screen-quest" class="window">
+        <h1>Nhiệm Vụ Hàng Ngày</h1>
+        
+        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+            <button class="btn" style="background: rgba(88, 166, 255, 0.2); border-color:#58a6ff; color:#fff; margin-top:0;" onclick="openScreen('screen-gps')">📍 GPS Chạy Bộ</button>
+            <button class="btn" style="background: rgba(255, 88, 88, 0.2); border-color:#ff5858; color:#fff; margin-top:0;" onclick="openCameraCounter()">👁️ Camera Hít Đất</button>
+        </div>
+
+        <div style="font-size: 12px; color: #8b949e; margin-bottom: 15px; text-align: center;">Tập đúng tư thế để tối đa hóa lượng Calo bị đốt cháy.</div>
+        <div id="quest-list"></div>
+        <button class="btn btn-back" onclick="openScreen('screen-home')">Trở về Sảnh</button>
+    </div>
+
+    <div id="screen-gps" class="window">
+        <h1 style="color:#58a6ff;">Quét Không Gian (GPS)</h1>
+        <div style="text-align: center; padding: 20px; background: rgba(1,4,9,0.8); border: 1px solid #30363d; border-radius: 8px;">
+            <label style="color:#f2cc60;">Thiết lập Mục Tiêu (Target):</label>
+            <select id="gps-target" style="margin-bottom: 15px;">
+                <option value="1">Chạy nhẹ 1.00 km (Khởi động)</option>
+                <option value="3">Chạy vừa 3.00 km (Đốt mỡ)</option>
+                <option value="5">Chạy bền 5.00 km (Thử thách)</option>
+                <option value="10">Nhiệm vụ Ẩn 10.00 km (Solo Leveling)</option>
+            </select>
+
+            <div id="gps-display" style="font-size: 45px; font-weight: bold; color: #fff; text-shadow: 0 0 15px #58a6ff;">
+                0.00 <span style="font-size: 18px; color: #8b949e;">km</span>
+            </div>
+            
+            <div style="font-size: 12px; color: #c9d1d9; margin-top: 5px;">Tiến độ Target: <span id="gps-target-text">0.00 / 1.00 km</span></div>
+            <div class="gps-progress-container"><div class="gps-progress-fill" id="gps-progress"></div></div>
+
+            <button id="btn-start-run" class="btn btn-pulse" style="background:#58a6ff; color:#000; margin-top:20px;" onclick="startGPS()">▶ BẮT ĐẦU CHẠY</button>
+            <button id="btn-stop-run" class="btn" style="background:#ff5858; color:#fff; display:none; margin-top:20px;" onclick="stopGPS()">⬛ KẾT THÚC & NHẬN THƯỞNG</button>
+        </div>
+        <button class="btn btn-back" onclick="openScreen('screen-quest')">Quay Lại</button>
+    </div>
+
+    <div id="screen-camera" class="window">
+        <h1 style="color:#ff5858;">Nhãn Quan Hệ Thống</h1>
+        <p style="font-size:12px; color:#c9d1d9; text-align:center;">Đặt điện thoại dưới mặt bạn. Khi bạn hít đất hạ xuống che camera, khung hình tối đi sẽ được tính 1 cái.</p>
+        
+        <div class="camera-container" id="camera-container">
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <div class="ai-overlay"></div>
+            <div class="scan-line"></div>
+            <div class="pushup-counter" id="pushup-count">0</div>
+        </div>
+        
+        <div style="font-size: 11px; color:#8b949e; text-align:center; margin-bottom:10px;">(Nếu Camera nhận diện kém, bạn có thể tự lấy ngón tay chạm vào màn hình đen ở trên để đếm)</div>
+        <button class="btn btn-pulse" style="background:#3fb950; color:#fff; border:none;" onclick="endPushupSession()">XÁC NHẬN KẾT QUẢ</button>
+        <button class="btn btn-back" onclick="openScreen('screen-quest')">Hủy Bỏ</button>
+    </div>
+
+    <div id="screen-stats" class="window">
+        <h1>Trạng Thái</h1>
+        <div style="text-align: center; margin-bottom: 15px;"><img id="status-img" src="rank_e.jpg" style="width:120px; border-radius:5px; border:2px solid #58a6ff; box-shadow: 0 0 20px rgba(88,166,255,0.4);"></div>
+        <div style="background: rgba(1,4,9,0.8); padding: 15px; border-radius: 5px; border: 1px solid #30363d;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><b>SỨC MẠNH (STR):</b> <span style="color:#ff5858; font-size:16px; font-weight:bold; text-shadow: 0 0 5px #ff5858;" id="val-str">10</span></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><b>NHANH NHẸN (AGI):</b> <span style="color:#3fb950; font-size:16px; font-weight:bold; text-shadow: 0 0 5px #3fb950;" id="val-agi">10</span></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><b>THỂ LỰC (VIT):</b> <span style="color:#d2a8ff; font-size:16px; font-weight:bold; text-shadow: 0 0 5px #d2a8ff;" id="val-vit">10</span></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>CẢM NHẬN (SEN):</b> <span style="color:#f2cc60; font-size:16px; font-weight:bold; text-shadow: 0 0 5px #f2cc60;" id="val-sen">10</span></div>
+        </div>
+        <button class="btn btn-back" onclick="openScreen('screen-home')">Trở về Sảnh</button>
+    </div>
+
+    <div id="screen-food" class="window">
+        <h1>Kho Dược Liệu</h1>
+        
+        <div style="background: rgba(1,4,9,0.8); padding: 15px; border-radius: 5px; border: 1px solid #3fb950; margin-bottom: 15px;">
+            <div style="font-size:13px; color:#c9d1d9;">Năng Lượng Còn Lại Hôm Nay:</div>
+            <div style="font-size:26px; font-weight:bold; color:#3fb950;"><span id="calo-remaining">0</span> <span style="font-size:14px; color:#8b949e;">Calo</span></div>
+        </div>
+
+        <label style="color:#f2cc60;">🍽️ Báo cáo Món ăn vừa nạp:</label>
+        <select id="food-selector" style="margin-top:5px; width: 100%;" onchange="updateFoodUnit()"></select>
+        
+        <div style="display:flex; gap:10px; margin-top:10px; margin-bottom:15px;">
+            <input type="number" id="food-amount" placeholder="Nhập số lượng..." style="flex: 2; margin-top:0;">
+            <div id="food-unit" style="background:#21262d; border:1px solid #30363d; padding:12px; border-radius:4px; color:#8b949e; display:flex; align-items:center; justify-content:center;">gram</div>
+            <button class="btn" style="flex:1; background:#f2cc60; color:#000; margin-top:0;" onclick="addFood()">THÊM</button>
+        </div>
+
+        <div style="font-size:12px; color:#8b949e; margin-bottom:5px;">Lịch sử hôm nay:</div>
+        <div class="food-list-container" id="food-log"></div>
+
+        <button class="btn btn-back" onclick="openScreen('screen-home')">Trở về Sảnh</button>
+    </div>
+
+    <div id="screen-boss-list" class="window">
+        <h1 style="color: #ff5858; border-color: #ff5858;">Cổng Không Gian</h1>
+        <div style="font-size: 12px; color: #8b949e; text-align:center; margin-bottom:15px;">Chú ý: Hệ thống sẽ phong ấn những cánh cổng vượt quá cấp độ của bạn.</div>
+        <div class="dungeon-list" id="dungeon-list-container"></div>
+        <button class="btn btn-back" onclick="openScreen('screen-home')">Quay Lại Sảnh</button>
+    </div>
+
+    <div id="screen-combat" class="window" style="position: relative;">
+        <div class="slash-effect" id="slash-fx"></div>
+        <h1 style="color: #ff5858; border-color: #ff5858; margin-bottom:10px;" id="combat-boss-name">Tên Boss</h1>
+        
+        <div class="combat-arena" id="combat-arena" style="display: flex;">
+            <div class="boss-sprite" id="boss-sprite">👹</div>
+            <div style="width:100%;">
+                <div style="font-size:12px; color:#ff5858; font-weight:bold; display:flex; justify-content:space-between;">
+                    <span>HP BOSS</span><span id="txt-boss-hp">100/100</span>
+                </div>
+                <div class="bar-container" style="height:15px; border-color:#ff5858;"><div class="bar-fill bg-hp" id="combat-boss-hp"></div></div>
+            </div>
+            
+            <div style="width:100%; margin-top:25px; padding: 15px; background: rgba(1,4,9,0.8); border: 1px solid #30363d; border-radius: 5px;">
+                <div style="font-size:12px; color:#3fb950; font-weight:bold; display:flex; justify-content:space-between;">
+                    <span>HP THỢ SĂN (VIT)</span><span id="txt-player-hp">100/100</span>
+                </div>
+                <div class="bar-container" style="height:12px; border-color:#3fb950;"><div class="bar-fill" style="background: linear-gradient(90deg, #238636, #3fb950);" id="combat-player-hp"></div></div>
+                
+                <div style="font-size:12px; color:#d2a8ff; font-weight:bold; display:flex; justify-content:space-between; margin-top:10px;">
+                    <span>MANA (SEN)</span><span id="txt-player-mp">50/50</span>
+                </div>
+                <div class="bar-container" style="height:10px; border-color:#8a2be2;"><div class="bar-fill bg-mp" id="combat-player-mp"></div></div>
+            </div>
+
+            <div class="skill-grid">
+                <button class="btn btn-skill skill-attack" onclick="useSkill('normal')">🗡 Chém Thường<br><span style="font-size:10px; color:#8b949e;">(Dùng STR)</span></button>
+                <button class="btn btn-skill skill-heavy" onclick="useSkill('heavy')">💥 Bạo Kích<br><span style="font-size:10px; color:#ff5858;">(-30 MP)</span></button>
+                <button class="btn btn-skill skill-heal" onclick="useSkill('heal')" style="grid-column: span 2;">💚 Dược Thủy Hồi Phục<br><span style="font-size:10px; color:#3fb950;">(-20 MP | Hồi 30% HP)</span></button>
+            </div>
+        </div>
+        <button class="btn btn-back" style="margin-top:20px;" onclick="openScreen('screen-boss-list')">Bỏ Chạy Khỏi Cổng</button>
+    </div>
+
+    <div id="boss-reward-popup" class="fullscreen-popup">
+        <h1 style="font-size: 32px; color: #ff5858; text-shadow: 0 0 20px #ff5858; margin-bottom: 0;">CỔNG ĐÃ ĐÓNG!</h1>
+        <p style="font-size: 16px; color: #fff; margin-top: 5px;">Bạn nhận được Lõi Ma Thú.</p>
+        <img src="so2.jpg" class="boss-reward-img" alt="Phần thưởng">
+        <p id="boss-reward-text" style="color: #f2cc60; font-weight:bold; font-size: 22px; text-shadow: 0 0 15px #f2cc60; margin:10px 0;"></p>
+        <button class="btn btn-main btn-pulse" style="width: 250px; background:#161b22; border: 2px solid #58a6ff;" onclick="closeBossPopup()">TRÍCH XUẤT PHẦN THƯỞNG</button>
+    </div>
+
+    <script>
+        // Hạt Mana & Đồng hồ
+        setInterval(()=>{ const m = document.createElement('div'); m.classList.add('mana-particle'); m.style.left = Math.random()*100+'vw'; m.style.animationDuration = Math.random()*3+2+'s'; document.body.appendChild(m); setTimeout(()=>m.remove(), 5000); }, 300);
+        function updateClock() { const now = new Date(); document.getElementById('realtime-clock').innerText = `[ ${now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} | ${now.toLocaleDateString('vi-VN')} ]`; }
+        setInterval(updateClock, 1000); updateClock();
+
+        function kiemTraNgayMoi() {
+            let today = new Date().toLocaleDateString();
+            if(localStorage.getItem('current_date') !== today) {
+                localStorage.setItem('current_date', today);
+                localStorage.setItem('completed_quests', JSON.stringify([])); 
+                localStorage.setItem('food_log', JSON.stringify([])); 
+                localStorage.removeItem('daily_quests_data'); localStorage.removeItem('daily_quests_date');
+            }
+        }
+
+        window.onload = function() {
+            initFoodSelector();
+            if (localStorage.getItem('player_name')) { 
+                kiemTraNgayMoi(); document.getElementById('screen-welcome').classList.remove('active-window'); openScreen('screen-home'); 
+            } 
+        };
+
+        // --- ĐIỀU HƯỚNG SỬA LỖI (FIX TẮT CAMERA / TẮT GPS) ---
+        function closeCamera() {
+            if(camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+            if(motionInterval) { clearInterval(motionInterval); motionInterval = null; }
+            let camContainer = document.getElementById('camera-container');
+            if (camContainer) camContainer.removeEventListener('click', manualCount);
+        }
+
+        function openScreen(screenId) {
+            document.querySelectorAll('.window').forEach(w => w.classList.remove('active-window'));
+            document.getElementById(screenId).classList.add('active-window');
+            
+            if(['screen-home', 'screen-stats', 'screen-food', 'screen-quest', 'screen-boss-list'].includes(screenId)) {
+                capNhatGiaoDien();
+            }
+            
+            // Sửa lỗi: Chỉ tắt luồng ngầm nếu chuyển khỏi màn hình đó, không gọi lại openScreen
+            if(screenId !== 'screen-camera') closeCamera();
+            if(screenId !== 'screen-gps' && watchId !== null) stopGPS(false);
+        }
+
+        function finishSetup() {
+            let fileInput = document.getElementById('input-avatar');
+            if(fileInput.files.length > 0) { let reader = new FileReader(); reader.onload = function(e) { localStorage.setItem('player_avatar', e.target.result); saveData(); }; reader.readAsDataURL(fileInput.files[0]); } 
+            else { localStorage.setItem('player_avatar', 'rank_e.jpg'); saveData(); }
+        }
+
+        function saveData() {
+            localStorage.setItem('player_name', document.getElementById('input-name').value); localStorage.setItem('player_gender', document.getElementById('input-gender').value); localStorage.setItem('player_age', document.getElementById('input-age').value); localStorage.setItem('player_weight', document.getElementById('input-weight').value); localStorage.setItem('player_height', document.getElementById('input-height').value); localStorage.setItem('player_focus', document.getElementById('input-focus').value); localStorage.setItem('player_weeks', document.getElementById('input-weeks').value || 12); localStorage.setItem('player_days', document.getElementById('input-days').value); localStorage.setItem('player_equip', document.getElementById('input-equip').value);
+            localStorage.setItem('target_total_days', parseInt(localStorage.getItem('player_weeks')) * parseInt(localStorage.getItem('player_days')));
+            localStorage.setItem('days_checked', 0); localStorage.setItem('player_level', 1); localStorage.setItem('player_exp', 0); localStorage.setItem('stat_str', 10); localStorage.setItem('stat_agi', 10); localStorage.setItem('stat_vit', 10); localStorage.setItem('stat_sen', 10);
+            localStorage.setItem('boss_beaten', JSON.stringify([])); 
+            kiemTraNgayMoi(); openScreen('screen-home');
+        }
+
+        function capNhatGiaoDien() {
+            document.getElementById('display-name').innerText = localStorage.getItem('player_name').toUpperCase();
+            document.getElementById('display-focus').innerText = localStorage.getItem('player_focus');
+            document.getElementById('display-avatar').src = localStorage.getItem('player_avatar');
+            document.getElementById('days-total').innerText = localStorage.getItem('target_total_days');
+            document.getElementById('days-checked').innerText = localStorage.getItem('days_checked');
+            
+            let btn = document.getElementById('btn-checkin');
+            if(localStorage.getItem('last_checkin') === new Date().toLocaleDateString()) { btn.innerText = "NHIỆM VỤ ĐÃ BÁO CÁO"; btn.disabled = true; btn.classList.remove('btn-pulse'); } 
+            else { btn.innerText = "BÁO CÁO NHIỆM VỤ HÀNG NGÀY"; btn.disabled = false; btn.classList.add('btn-pulse'); }
+
+            let lvl = parseInt(localStorage.getItem('player_level')); let exp = parseInt(localStorage.getItem('player_exp'));
+            document.getElementById('display-level').innerText = lvl; document.getElementById('display-exp-bar').style.width = `${(exp/(100 + (lvl - 1) * 50))*100}%`;
+            ['str', 'agi', 'vit', 'sen'].forEach(s => document.getElementById(`val-${s}`).innerText = localStorage.getItem(`stat_${s}`));
+
+            let maxStat = Math.max(...['str', 'agi', 'vit', 'sen'].map(s => parseInt(localStorage.getItem(`stat_${s}`))));
+            let cTitle = "Thợ Săn Hạng E"; let sImg = "rank_e.jpg";
+            if (maxStat >= 100) { cTitle = "Hoàng Đế (Hạng S)"; sImg = "rank_s.jpg"; document.getElementById('display-class').style.color = "#d2a8ff"; } 
+            else if (maxStat >= 66) { cTitle = "Chúa Tể (Hạng A)"; sImg = "rank_a.jpg"; document.getElementById('display-class').style.color = "#ff5858"; } 
+            else if (maxStat >= 33) { cTitle = "Sát Thủ (Hạng C)"; sImg = "rank_c.jpg"; document.getElementById('display-class').style.color = "#3fb950"; }
+            document.getElementById('display-class').innerText = cTitle; document.getElementById('status-img').src = sImg;
+
+            tinhDinhDuong(); buildQuests(); renderBossList();
+        }
+
+        function diemDanh() {
+            let total = parseInt(localStorage.getItem('target_total_days')); let current = parseInt(localStorage.getItem('days_checked'));
+            if(current >= total) { alert("BẠN ĐÃ HOÀN THÀNH TOÀN BỘ LỘ TRÌNH THỨC TỈNH!"); return; }
+            localStorage.setItem('last_checkin', new Date().toLocaleDateString()); localStorage.setItem('days_checked', current + 1);
+            nhanThuong(15, 'sen', 1, null); 
+        }
+
+        // --- DATABASE DINH DƯỠNG ---
+        const foodDatabase = [
+            { id: 'com', name: 'Cơm trắng', unit: 'gram', calPerUnit: 1.3 }, { id: 'ucga', name: 'Ức gà luộc', unit: 'gram', calPerUnit: 1.65 }, 
+            { id: 'trung', name: 'Trứng luộc', unit: 'cái', calPerUnit: 78 }, { id: 'bo', name: 'Thịt bò bít tết', unit: 'gram', calPerUnit: 2.5 },
+            { id: 'whey', name: 'Whey Protein', unit: 'muỗng', calPerUnit: 120 }, { id: 'pho', name: 'Phở bò', unit: 'tô', calPerUnit: 400 },
+            { id: 'banhmi', name: 'Bánh mì thịt', unit: 'ổ', calPerUnit: 350 }, { id: 'rau', name: 'Rau xanh luộc', unit: 'gram', calPerUnit: 0.3 },
+            { id: 'chuoi', name: 'Chuối', unit: 'quả', calPerUnit: 105 }, { id: 'sua', name: 'Sữa tươi', unit: 'ml', calPerUnit: 0.62 },
+            { id: 'yenchach', name: 'Yến mạch', unit: 'gram', calPerUnit: 3.89 }, { id: 'khoailang', name: 'Khoai lang luộc', unit: 'gram', calPerUnit: 0.86 }
+        ];
+
+        function initFoodSelector() {
+            let html = '';
+            foodDatabase.forEach(f => { let textCal = f.unit === 'gram' || f.unit === 'ml' ? `${Math.round(f.calPerUnit*100)} Calo/100${f.unit}` : `${f.calPerUnit} Calo/1 ${f.unit}`; html += `<option value="${f.id}">${f.name} (${textCal})</option>`; });
+            document.getElementById('food-selector').innerHTML = html; updateFoodUnit();
+        }
+
+        function updateFoodUnit() { let selId = document.getElementById('food-selector').value; let food = foodDatabase.find(f => f.id === selId); document.getElementById('food-unit').innerText = food.unit; document.getElementById('food-amount').placeholder = `Số ${food.unit}...`; }
+
+        function tinhDinhDuong() {
+            let w = parseFloat(localStorage.getItem('player_weight')); let h = parseFloat(localStorage.getItem('player_height')); let a = parseInt(localStorage.getItem('player_age')); let g = localStorage.getItem('player_gender');
+            let bmr = g === 'Nam' ? (13.397 * w) + (4.799 * h) - (5.677 * a) + 88.362 : (9.247 * w) + (3.098 * h) - (4.330 * a) + 447.593;
+            let targetCalo = Math.round(localStorage.getItem('player_focus') === 'Giảm Mỡ Toàn Thân' ? (bmr*1.3) - 500 : (bmr*1.5) + 300);
+            
+            let foodLog = JSON.parse(localStorage.getItem('food_log') || "[]"); let consumedCalo = 0; let htmlLog = '';
+            foodLog.forEach((food) => { consumedCalo += food.cal; htmlLog += `<div class="food-item">✓ ${food.name} <span style="color:#ff5858;">-${food.cal} Calo</span></div>`; });
+            if(htmlLog === '') htmlLog = '<div style="color:#8b949e; font-size:12px; text-align:center; padding:10px;">Chưa nạp thực phẩm nào.</div>';
+            document.getElementById('food-log').innerHTML = htmlLog;
+
+            let remaining = targetCalo - consumedCalo; let rmEl = document.getElementById('calo-remaining');
+            rmEl.innerText = remaining; rmEl.style.color = remaining < 0 ? "#ff5858" : "#3fb950";
+        }
+
+        function addFood() {
+            let selId = document.getElementById('food-selector').value; let amount = parseFloat(document.getElementById('food-amount').value);
+            if(isNaN(amount) || amount <= 0) { alert("Nhập số lượng hợp lệ!"); return; }
+            let food = foodDatabase.find(f => f.id === selId); let calCalc = Math.round(food.calPerUnit * amount); let nameLog = `${food.name} (${amount} ${food.unit})`;
+            let foodLog = JSON.parse(localStorage.getItem('food_log') || "[]"); foodLog.push({ name: nameLog, cal: calCalc }); localStorage.setItem('food_log', JSON.stringify(foodLog));
+            document.getElementById('food-amount').value = ''; tinhDinhDuong();
+        }
+
+        // --- DATABASE NHIỆM VỤ CHI TIẾT ---
+        const EXERCISE_DB = {
+            warmup: [ { id: "w1", title: "Khởi động toàn thân", inst: "Xoay kỹ các khớp: cổ tay, cổ chân, vai, hông. Sau đó thực hiện nhảy tại chỗ (Jumping Jacks) nhịp nhàng.", detail: "5 Phút | Đốt: ~30 Calo", exp: 10, stat: 'vit', pt: 1, color: "#d2a8ff" }, { id: "w2", title: "Giãn cơ động", inst: "Gập người vặn mình chạm mũi chân, ép dẻo gối, xoay cánh tay biên độ lớn.", detail: "5 Phút | Đốt: ~25 Calo", exp: 10, stat: 'vit', pt: 1, color: "#d2a8ff" } ],
+            chest_bw: [ { id: "cb1", title: "Hít đất chuẩn (Standard Push-ups)", inst: "Hai tay rộng bằng vai, thân người tạo thành đường thẳng. Hạ người đến khi ngực cách sàn 2cm rồi đẩy mạnh lên. 👉 Hít sâu khi hạ, thở ra khi đẩy.", detail: "4 Hiệp x 10-15 Nhịp | Nghỉ 60s", exp: 40, stat: 'str', pt: 2, color: "#ff5858" }, { id: "cb2", title: "Hít đất dốc (Pike Push-ups)", inst: "Tạo tư thế chữ V lộn ngược (chân để trên bục cao). Hạ đỉnh đầu xuống gần hai bàn tay.", detail: "3 Hiệp x 8-12 Nhịp | Nghỉ 60s", exp: 35, stat: 'str', pt: 1, color: "#ff5858" }, { id: "cb3", title: "Chống tay sau (Bench Dips)", inst: "Quay lưng lại, chống hai tay lên mép ghế. Hạ hông xuống sát đất rồi dùng lực cơ tay sau đẩy người lên.", detail: "3 Hiệp x 12-15 Nhịp | Nghỉ 45s", exp: 20, stat: 'agi', pt: 1, color: "#3fb950" }, { id: "cb4", title: "Hít đất rộng tay (Wide Push-ups)", inst: "Để hai tay rộng hơn vai, tập trung lực kéo căng cơ ngực. Hạ sâu và đẩy lên từ từ.", detail: "3 Hiệp x 10 Nhịp | Nghỉ 60s", exp: 30, stat: 'str', pt: 1, color: "#ff5858" } ],
+            chest_db: [ { id: "cd1", title: "Đẩy ngực tạ đơn (DB Bench Press)", inst: "Nằm phẳng. Cầm 2 tạ đơn hạ xuống ngang ngực, cùi chỏ góc 45 độ. Đẩy thẳng tạ lên trời.", detail: "4 Hiệp x 8-12 Nhịp | Nghỉ 90s", exp: 50, stat: 'str', pt: 2, color: "#ff5858" }, { id: "cd2", title: "Ép ngực tạ đơn (DB Flyes)", inst: "Nằm ngửa, hơi cong nhẹ khuỷu tay. Mở rộng 2 cánh tay ra hai bên đến khi ngực căng, rồi ép tạ kéo lên.", detail: "3 Hiệp x 10-15 Nhịp | Nghỉ 60s", exp: 30, stat: 'str', pt: 1, color: "#ff5858" } ],
+            chest_gym: [ { id: "cg1", title: "Đẩy ngực tạ đòn (Barbell Bench Press)", inst: "Nằm trên ghế phẳng, cầm thanh đòn rộng hơn vai. Hạ thanh chạm nhẹ ngực rồi đẩy dứt khoát.", detail: "4 Hiệp x 6-10 Nhịp | Nghỉ 120s", exp: 60, stat: 'str', pt: 3, color: "#ff5858" }, { id: "cg2", title: "Ép cáp ngực (Cable Crossover)", inst: "Đứng giữa máy cáp. Kéo hai tay chéo vào nhau ở phía trước bụng, siết chặt cơ ngực.", detail: "3 Hiệp x 15 Nhịp | Nghỉ 45s", exp: 30, stat: 'agi', pt: 1, color: "#3fb950" } ],
+            back_bw: [ { id: "bb1", title: "Kéo xà đơn (Pull-ups)", inst: "Nắm thanh xà rộng hơn vai. Dùng lực cơ lưng kéo người lên đến khi cằm qua xà. Hạ chậm.", detail: "4 Hiệp x Tối đa | Nghỉ 120s", exp: 60, stat: 'str', pt: 2, color: "#ff5858" }, { id: "bb2", title: "Nằm sấp cất cánh (Superman)", inst: "Nằm sấp. Dùng cơ lưng dưới nhấc bổng cả ngực và đùi lên khỏi mặt đất, giữ 2s rồi hạ.", detail: "3 Hiệp x 15 Nhịp | Nghỉ 45s", exp: 25, stat: 'str', pt: 1, color: "#ff5858" } ],
+            back_db: [ { id: "bd1", title: "Chèo thuyền tạ đơn (DB Row)", inst: "Chống 1 tay và 1 gối lên ghế. Lưng thẳng. Kéo tạ từ dưới lên sát hông.", detail: "4 Hiệp x 10 Nhịp/Tay | Nghỉ 90s", exp: 45, stat: 'str', pt: 2, color: "#ff5858" }, { id: "bd2", title: "Cuốn tạ tay trước (DB Bicep Curl)", inst: "Đứng thẳng. Ép sát bắp tay vào sườn. Chỉ gập khuỷu tay kéo tạ lên sát vai.", detail: "3 Hiệp x 12 Nhịp | Nghỉ 60s", exp: 25, stat: 'agi', pt: 1, color: "#3fb950" } ],
+            back_gym: [ { id: "bg1", title: "Kéo Lưng Tạ Đòn (Barbell Row)", inst: "Cúi người 45 độ, lưng thẳng tuyệt đối. Kéo thanh tạ chạm vào phần rốn.", detail: "4 Hiệp x 8-10 Nhịp | Nghỉ 120s", exp: 60, stat: 'str', pt: 3, color: "#ff5858" }, { id: "bg2", title: "Kéo xô máy (Lat Pulldown)", inst: "Kéo thanh đòn từ trên cao xuống chạm ngực trên, ưỡn ngực ra. Nhả tay thẳng lên.", detail: "4 Hiệp x 12 Nhịp | Nghỉ 90s", exp: 35, stat: 'str', pt: 1, color: "#ff5858" } ],
+            legs_bw: [ { id: "lb1", title: "Ngồi xổm chuẩn (Bodyweight Squat)", inst: "Đứng rộng bằng vai. Đẩy hông ra sau và ngồi xuống sâu nhất có thể, lưng thẳng.", detail: "4 Hiệp x 20 Nhịp | Nghỉ 60s", exp: 40, stat: 'agi', pt: 2, color: "#3fb950" }, { id: "lb2", title: "Chùng chân (Lunges)", inst: "Bước một chân dài lên trước, hạ thấp trọng tâm đến khi 2 đầu gối gập 90 độ.", detail: "3 Hiệp x 15 Nhịp/chân | Nghỉ 60s", exp: 30, stat: 'vit', pt: 1, color: "#d2a8ff" } ],
+            legs_db: [ { id: "ld1", title: "Squat ôm tạ (Goblet Squat)", inst: "Ôm 1 quả tạ đơn sát trước ngực. Hạ hông ngồi xuống sâu, cùi chỏ lọt vào giữa 2 đầu gối.", detail: "4 Hiệp x 12-15 Nhịp | Nghỉ 90s", exp: 50, stat: 'str', pt: 2, color: "#ff5858" }, { id: "ld2", title: "Gập hông tạ đơn (DB RDL)", inst: "Cầm 2 tạ đơn. Giữ lưng thẳng, đẩy hông ra sau hết cỡ đến khi căng cơ đùi sau.", detail: "4 Hiệp x 10 Nhịp | Nghỉ 90s", exp: 45, stat: 'str', pt: 2, color: "#ff5858" } ],
+            legs_gym: [ { id: "lg1", title: "Gánh tạ đòn (Barbell Squat)", inst: "Vác tạ đòn lên vai. Gồng cứng bụng, hạ gối sâu qua song song.", detail: "4 Hiệp x 8 Nhịp | Nghỉ 120s", exp: 70, stat: 'str', pt: 3, color: "#ff5858" }, { id: "lg2", title: "Đạp đùi máy (Leg Press)", inst: "Đạp bàn đẩy lên cao (không khóa thẳng sụn gối), hạ từ từ xuống sát ngực.", detail: "4 Hiệp x 12 Nhịp | Nghỉ 90s", exp: 50, stat: 'str', pt: 2, color: "#ff5858" } ],
+            cardio: [ { id: "c1", title: "Chuỗi HIIT Đốt Mỡ Địa Ngục", inst: "30s Nhảy tại chỗ -> 30s Chống tay leo núi -> 30s Nghỉ. Lặp lại chu kỳ.", detail: "5 Vòng (15 Phút) | Đốt ~250 Calo", exp: 50, stat: 'vit', pt: 2, color: "#d2a8ff" }, { id: "c2", title: "Burpees toàn diện", inst: "Từ tư thế đứng -> Ngồi xổm -> Bật 2 chân ra sau -> Hít đất 1 cái -> Thu chân về -> Bật nhảy cao.", detail: "3 Hiệp x 15 Nhịp | Nghỉ 60s", exp: 45, stat: 'vit', pt: 2, color: "#d2a8ff" } ]
+        };
+
+        function getRandomQuest(category, activeIds) { let available = EXERCISE_DB[category].filter(q => !activeIds.includes(q.id)); if(available.length === 0) return null; return available[Math.floor(Math.random() * available.length)]; }
+
+        function generateDailyQuests() {
+            let focus = localStorage.getItem('player_focus'); let equip = localStorage.getItem('player_equip'); let quests = [];
+            let qWarmup = getRandomQuest('warmup', []); if(qWarmup) quests.push(qWarmup);
+            let cat = '';
+            if(focus === "Ngực và Tay Sau") cat = equip === 'none' ? 'chest_bw' : (equip === 'dumbbell' ? 'chest_db' : 'chest_gym');
+            else if(focus === "Lưng và Tay Trước") cat = equip === 'none' ? 'back_bw' : (equip === 'dumbbell' ? 'back_db' : 'back_gym');
+            else if(focus === "Mông và Đùi") cat = equip === 'none' ? 'legs_bw' : (equip === 'dumbbell' ? 'legs_db' : 'legs_gym');
+            else cat = 'cardio';
+
+            let qMain1 = getRandomQuest(cat, []);
+            if(qMain1) { quests.push(qMain1); let qMain2 = getRandomQuest(cat, [qMain1.id]); if(qMain2) quests.push(qMain2); }
+            return quests;
+        }
+
+        function buildQuests() {
+            let today = new Date().toLocaleDateString(); let savedDate = localStorage.getItem('daily_quests_date');
+            let dailyQuests = JSON.parse(localStorage.getItem('daily_quests_data') || "null");
+            if(!dailyQuests || savedDate !== today) { dailyQuests = generateDailyQuests(); localStorage.setItem('daily_quests_data', JSON.stringify(dailyQuests)); localStorage.setItem('daily_quests_date', today); }
+
+            let completed = JSON.parse(localStorage.getItem('completed_quests') || "[]"); let qHTML = '';
+
+            dailyQuests.forEach(q => {
+                if(!completed.includes(q.id)) {
+                    let category = ''; for (const [cat, arr] of Object.entries(EXERCISE_DB)) { if(arr.some(item => item.id === q.id)) category = cat; }
+                    qHTML += `
+                    <div class="quest-box" id="${q.id}" style="border-left-color: ${q.color}">
+                        <div class="quest-title">${q.title}</div>
+                        <div class="quest-instruct">💡 Hướng dẫn: ${q.inst}</div>
+                        <div class="quest-detail">⏱ Yêu cầu: ${q.detail}</div>
+                        <div class="quest-reward">🎁 Phần thưởng: +${q.exp} EXP | +${q.pt} ${q.stat.toUpperCase()}</div>
+                        <div class="quest-actions">
+                            <button class="btn-complete" onclick="xoaQuest(event, '${q.id}', ${q.exp}, '${q.stat}', ${q.pt})">XÁC NHẬN HOÀN THÀNH</button>
+                            <button class="btn-reroll" onclick="rerollQuest('${q.id}', '${category}')">🔄 Đổi Bài</button>
+                        </div>
+                    </div>`;
+                }
+            });
+            if(qHTML === '') qHTML = '<div style="text-align:center; color:#3fb950; font-weight:bold; font-size:16px; background:rgba(1,4,9,0.8); padding:20px; border-radius:8px;">🔥 Tuyệt vời! Bạn đã dọn sạch Nhiệm Vụ hôm nay.</div>';
+            document.getElementById('quest-list').innerHTML = qHTML;
+        }
+
+        function rerollQuest(questId, category) {
+            let dailyQuests = JSON.parse(localStorage.getItem('daily_quests_data')); let activeIds = dailyQuests.map(q => q.id); 
+            let newQuest = getRandomQuest(category, activeIds);
+            if(newQuest) { let index = dailyQuests.findIndex(q => q.id === questId); dailyQuests[index] = newQuest; localStorage.setItem('daily_quests_data', JSON.stringify(dailyQuests)); buildQuests(); } 
+            else { alert("Hệ thống: Không còn bài tập nào khác trong kho dữ liệu để đổi!"); }
+        }
+
+        function xoaQuest(event, questId, exp, statCode, statPoint) {
+            let box = document.getElementById(questId);
+            let completed = JSON.parse(localStorage.getItem('completed_quests')); completed.push(questId);
+            localStorage.setItem('completed_quests', JSON.stringify(completed));
+            nhanThuong(exp, statCode, statPoint, event);
+            box.style.transform = "scale(0.8) translateY(-20px)"; box.style.opacity = "0";
+            setTimeout(() => { box.style.display = 'none'; buildQuests(); }, 400);
+        }
+
+        function nhanThuong(expGained, statType, statPoints, e) {
+            let lvl = parseInt(localStorage.getItem('player_level')); let exp = parseInt(localStorage.getItem('player_exp')) + expGained;
+            if (exp >= 100 + (lvl - 1) * 50) { lvl++; exp -= (100 + (lvl - 1) * 50); alert(`[HỆ THỐNG] THĂNG CẤP! BẠN ĐẠT LEVEL ${lvl}`); }
+            localStorage.setItem('player_level', lvl); localStorage.setItem('player_exp', exp);
+            localStorage.setItem(`stat_${statType}`, parseInt(localStorage.getItem(`stat_${statType}`)) + statPoints);
+            
+            if(e) {
+                let floatText = document.createElement("div"); floatText.innerText = `+${expGained} EXP | +${statPoints} ${statType.toUpperCase()}`;
+                floatText.style.position = "fixed"; floatText.style.color = "#ffeb3b"; floatText.style.fontWeight = "bold"; floatText.style.fontSize = "22px"; floatText.style.textShadow = "0 0 10px #ffeb3b";
+                floatText.style.left = (e.clientX - 40) + "px"; floatText.style.top = (e.clientY - 20) + "px";
+                floatText.style.transition = "all 1s cubic-bezier(0.1, 0.8, 0.3, 1)"; floatText.style.zIndex = "9999";
+                document.body.appendChild(floatText);
+                setTimeout(() => { floatText.style.top = (e.clientY - 120) + "px"; floatText.style.opacity = "0"; }, 50); setTimeout(() => { floatText.remove(); }, 1000);
+            }
+            capNhatGiaoDien();
+        }
+
+        // --- CẢM BIẾN CAMERA HÍT ĐẤT (KHÔNG CẦN AI NẶNG) ---
+        let pushupCount = 0; let camStream = null; let isDown = false; let motionInterval = null;
+
+        function openCameraCounter() {
+            openScreen('screen-camera'); pushupCount = 0; document.getElementById('pushup-count').innerText = 0;
+            let camContainer = document.getElementById('camera-container');
+            camContainer.addEventListener('click', manualCount);
+
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(stream => {
+                    camStream = stream; let video = document.getElementById('webcam'); video.srcObject = stream;
+                    video.onloadedmetadata = () => { video.play(); startMotionDetection(); };
+                }).catch(err => { alert("Hệ thống: Không thể truy cập Camera. Chuyển sang đếm bằng chạm màn hình."); });
+            } else { alert("Hệ thống: Trình duyệt không hỗ trợ Camera."); }
+        }
+
+        function manualCount() { pushupCount++; updateCounterUI(); }
+
+        function startMotionDetection() {
+            let video = document.getElementById('webcam'); let canvas = document.getElementById('canvas'); let ctx = canvas.getContext('2d');
+            canvas.width = 50; canvas.height = 50; // Resize siêu nhỏ để tính toán cho mượt
+
+            motionInterval = setInterval(() => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                let data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                let totalBrightness = 0;
+                for(let i = 0; i < data.length; i += 4) { totalBrightness += (data[i] + data[i+1] + data[i+2]) / 3; }
+                let avgBrightness = totalBrightness / (canvas.width * canvas.height);
+
+                if (avgBrightness < 60 && !isDown) { isDown = true; } // Bị che camera (hạ xuống)
+                else if (avgBrightness > 80 && isDown) { isDown = false; pushupCount++; updateCounterUI(); } // Đẩy lên
+            }, 200);
+        }
+
+        function updateCounterUI() {
+            let counterEl = document.getElementById('pushup-count'); counterEl.innerText = pushupCount;
+            counterEl.style.transform = "scale(1.5)"; setTimeout(() => counterEl.style.transform = "scale(1)", 200);
+        }
+
+        function endPushupSession() {
+            closeCamera(); openScreen('screen-quest');
+            if(pushupCount > 0) {
+                let exp = pushupCount * 2; 
+                alert(`Bạn đã thực hiện ${pushupCount} cái Hít Đất!\nNhận được: +${exp} EXP | +1 Sức Mạnh (STR)`);
+                nhanThuong(exp, 'str', 1, null);
+            }
+        }
+
+        // --- HỆ THỐNG ĐỊNH VỊ GPS VỚI TARGET ---
+        let watchId = null; let totalKm = 0; let lastLat = null; let lastLon = null;
+
+        function calcDist(lat1, lon1, lat2, lon2) {
+            const p = 0.017453292519943295; const c = Math.cos;
+            const a = 0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2;
+            return 12742 * Math.asin(Math.sqrt(a)); 
+        }
+
+        function updateGPSUI() {
+            let targetKm = parseFloat(document.getElementById('gps-target').value);
+            document.getElementById('gps-display').innerHTML = `${totalKm.toFixed(2)} <span style="font-size: 18px; color: #8b949e;">km</span>`;
+            document.getElementById('gps-target-text').innerText = `${totalKm.toFixed(2)} / ${targetKm.toFixed(2)} km`;
+            let percentage = (totalKm / targetKm) * 100; if(percentage > 100) percentage = 100;
+            document.getElementById('gps-progress').style.width = `${percentage}%`;
+        }
+
+        function startGPS() {
+            if (!navigator.geolocation) { alert("Trình duyệt không hỗ trợ GPS!"); return; }
+            document.getElementById('btn-start-run').style.display = 'none'; document.getElementById('btn-stop-run').style.display = 'block'; document.getElementById('gps-target').disabled = true;
+            totalKm = 0; lastLat = null; lastLon = null; updateGPSUI();
+
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    let cLat = pos.coords.latitude; let cLon = pos.coords.longitude;
+                    if (lastLat !== null) { let d = calcDist(lastLat, lastLon, cLat, cLon); if(d > 0.005) totalKm += d; }
+                    lastLat = cLat; lastLon = cLon; updateGPSUI();
+                },
+                (err) => { alert("Lỗi GPS: Xin cấp quyền Vị trí (Location)!"); stopGPS(false); },
+                { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+            );
+        }
+
+        function stopGPS(giveReward = true) {
+            if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+            document.getElementById('btn-start-run').style.display = 'block'; document.getElementById('btn-stop-run').style.display = 'none'; document.getElementById('gps-target').disabled = false;
+
+            let targetKm = parseFloat(document.getElementById('gps-target').value);
+            if(giveReward && totalKm > 0.1) { 
+                let exp = Math.round(totalKm * 50); let vit = Math.max(1, Math.floor(totalKm * 2));
+                let msg = `Kết thúc chạy! Quãng đường: ${totalKm.toFixed(2)} km.\nThưởng: +${exp} EXP | +${vit} Thể Lực (VIT)`;
+                if(totalKm >= targetKm) { exp += 50; vit += 1; msg = `🎉 HOÀN THÀNH MỤC TIÊU ${targetKm}KM!\n` + msg + `\nThưởng thêm: +50 EXP | +1 VIT`; }
+                alert(msg); nhanThuong(exp, 'vit', vit, null);
+            }
+        }
+
+        // --- HẦM NGỤC ĐA CHIỀU (BOSS TIER & SKILL) ---
+        const BOSS_LIST = [
+            { id: 1, name: "Yêu Tinh Râu Xanh", rank: "E", hp: 100, dmg: 5, reqStr: 10, exp: 50, str: 2, icon: "👺" },
+            { id: 2, name: "Sói Tuyết Mõm Độc", rank: "D", hp: 300, dmg: 15, reqStr: 20, exp: 100, str: 5, icon: "🐺" },
+            { id: 3, name: "Ma Thú Khổng Lồ", rank: "C", hp: 800, dmg: 30, reqStr: 40, exp: 200, str: 10, icon: "🧌" },
+            { id: 4, name: "Hiệp Sĩ Máu Igris", rank: "B", hp: 2000, dmg: 80, reqStr: 80, exp: 500, str: 20, icon: "🩸" },
+            { id: 5, name: "Kiến Vương Beru", rank: "S", hp: 5000, dmg: 150, reqStr: 150, exp: 1500, str: 50, icon: "🐜" }
+        ];
+
+        let currentBoss = null; let p_hp = 0; let p_maxHp = 0; let p_mp = 0; let p_maxMp = 0; let b_hp = 0;
+
+        function renderBossList() {
+            let beaten = JSON.parse(localStorage.getItem('boss_beaten') || "[]"); let str = parseInt(localStorage.getItem('stat_str')); let html = '';
+            BOSS_LIST.forEach(b => {
+                let isBeaten = beaten.includes(b.id);
+                let lock = str < b.reqStr ? `opacity:0.6; filter: grayscale(100%); pointer-events:none;` : '';
+                let lockText = str < b.reqStr ? `<br><span style="color:#ff5858; font-size:12px;">🔒 Yêu cầu: ${b.reqStr} STR để mở cổng</span>` : '';
+                let status = isBeaten ? `<span style="color:#3fb950; float:right; border: 1px solid #3fb950; padding:2px 5px; border-radius:3px; font-size:10px;">ĐÃ DIỆT</span>` : '';
+
+                html += `
+                <div class="dungeon-card" style="${lock}" onclick="vaoHamNguc(${b.id})">
+                    <div style="font-size:16px; font-weight:bold; color:#fff;">${b.icon} ${b.name} <span style="color:#8b949e; font-size:12px;">(Hạng ${b.rank})</span> ${status}</div>
+                    <div style="font-size:12px; color:#c9d1d9; margin-top:8px;">HP: ${b.hp} | Lực Tấn Công: ${b.dmg} ${lockText}</div>
+                </div>`;
+            });
+            document.getElementById('dungeon-list-container').innerHTML = html;
+        }
+
+        function vaoHamNguc(bossId) {
+            currentBoss = BOSS_LIST.find(b => b.id === bossId); b_hp = currentBoss.hp;
+            p_maxHp = parseInt(localStorage.getItem('stat_vit')) * 10; p_hp = p_maxHp;
+            p_maxMp = parseInt(localStorage.getItem('stat_sen')) * 5; p_mp = p_maxMp;
+
+            document.getElementById('combat-boss-name').innerText = `Hầm Ngục Hạng ${currentBoss.rank}: ${currentBoss.name}`;
+            document.getElementById('boss-sprite').innerText = currentBoss.icon;
+            updateCombatUI(); openScreen('screen-combat');
+        }
+
+        function updateCombatUI() {
+            document.getElementById('combat-boss-hp').style.width = `${(b_hp / currentBoss.hp) * 100}%`; document.getElementById('txt-boss-hp').innerText = `${b_hp}/${currentBoss.hp}`;
+            document.getElementById('combat-player-hp').style.width = `${(p_hp / p_maxHp) * 100}%`; document.getElementById('txt-player-hp').innerText = `${Math.round(p_hp)}/${p_maxHp}`;
+            document.getElementById('combat-player-mp').style.width = `${(p_mp / p_maxMp) * 100}%`; document.getElementById('txt-player-mp').innerText = `${p_mp}/${p_maxMp}`;
+        }
+
+        function useSkill(type) {
+            let str = parseInt(localStorage.getItem('stat_str')); let damage = 0; let slashFx = document.getElementById('slash-fx');
+
+            if (type === 'normal') { damage = str * (Math.floor(Math.random() * 2) + 1); triggerSlash(slashFx); } 
+            else if (type === 'heavy') { if(p_mp >= 30) { p_mp -= 30; damage = str * 3; triggerSlash(slashFx); } else { alert("Không đủ Mana!"); return; } } 
+            else if (type === 'heal') { if(p_mp >= 20) { p_mp -= 20; p_hp += (p_maxHp * 0.4); if(p_hp > p_maxHp) p_hp = p_maxHp; } else { alert("Không đủ Mana!"); return; } }
+
+            b_hp -= damage;
+            let arena = document.getElementById('combat-arena'); arena.classList.add('shake'); setTimeout(() => arena.classList.remove('shake'), 400);
+
+            if (b_hp <= 0) {
+                b_hp = 0; updateCombatUI();
+                setTimeout(() => {
+                    document.getElementById('boss-reward-text').innerText = `+${currentBoss.exp} EXP | +${currentBoss.str} STR`;
+                    document.getElementById('boss-reward-popup').style.display = 'flex';
+                    nhanThuong(currentBoss.exp, 'str', currentBoss.str, null);
+                    let beaten = JSON.parse(localStorage.getItem('boss_beaten')); if(!beaten.includes(currentBoss.id)) beaten.push(currentBoss.id); localStorage.setItem('boss_beaten', JSON.stringify(beaten));
+                }, 500); return;
+            }
+
+            setTimeout(() => {
+                let bossDmg = currentBoss.dmg + Math.floor(Math.random() * 5); p_hp -= bossDmg;
+                document.body.style.backgroundColor = "#3a0000"; setTimeout(() => document.body.style.backgroundColor = "#0d1117", 100);
+                if(p_hp <= 0) { p_hp = 0; updateCombatUI(); alert("BẠN ĐÃ BỊ HẠ GỤC. Rút lui về sảnh!"); openScreen('screen-home'); } else { updateCombatUI(); }
+            }, 600);
+            updateCombatUI();
+        }
+
+        function triggerSlash(element) { element.classList.remove('slash-animate'); void element.offsetWidth; element.classList.add('slash-animate'); }
+        function closeBossPopup() { document.getElementById('boss-reward-popup').style.display = 'none'; openScreen('screen-boss-list'); }
+    </script>
+</body>
+</html>
